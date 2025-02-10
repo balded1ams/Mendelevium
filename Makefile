@@ -3,7 +3,7 @@ CFLAGS=-Wall -Wextra -Werror -Iinclude -I/usr/include/freetype2 -I/usr/include/l
 LDFLAGS=-lX11 -lXft
 
 
-all: src/main.c 
+all: main.c src/rmd_lexer.c
 	$(CC) $(CFLAGS) -o main $? $(LDFLAGS)
 
 clean:

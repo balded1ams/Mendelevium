@@ -8,6 +8,7 @@ typedef struct {
 Literal_Token literal_tokens[] = {
     {.text = '#', .token = TOKEN_HEADER},
     {.text = '\n', .token = TOKEN_END},
+    {.text = '*', .token = TOKEN_ITALIC},
 };
 #define literal_tokens_count (sizeof(literal_tokens)/sizeof(literal_tokens[0]))
 
@@ -40,19 +41,26 @@ void lexer_trim_left(Rmd_Lexer *l) {
     }
 }
 
-Rmd_Token _Rmd_lexer_next(Toml_Lexer *l) {
+Rmd_Token _Rmd_lexer_next(Rmd_Lexer *l) {
     lexer_trim_left(l);
-    Toml_Token token = {
+    Rmd_Token token = {
         .text = &l->content[l->cursor],
         .row = l->line,
         .col = l->cursor - l->bol,
     };
     if (l->cursor >= l->content_len) return token;
 
-    if (l->content[l->cursor] == '"') {
-        token.type = TOKEN_STRING;
+    if(l->content[l->cursor] == '\n'){
+        token.type = TOKEN_END;
+        token.text_len = 1;
         lexer_chop_char(l, 1);
-        while (l->cursor < l->content_len && l->content[l->cursor] != '"' && l->content[l->cursor] != '\n') {
+        return token;
+    }
+
+    if (l->content[l->cursor] == '*') {
+        token.type = TOKEN_ITALIC;
+        lexer_chop_char(l, 1);
+        while (l->cursor < l->content_len && l->content[l->cursor] != '*' && l->content[l->cursor] != '\n') {
             lexer_chop_char(l, 1);
         }
         if (l->cursor < l->content_len) {
@@ -63,8 +71,20 @@ Rmd_Token _Rmd_lexer_next(Toml_Lexer *l) {
         return token;
     }
 
+    if (l->content[l->cursor] == '-') {
+        token.type = TOKEN_LIST;
+        while (l->cursor < l->content_len && l->content[l->cursor] != '\n') {
+            lexer_chop_char(l, 1);
+        }
+        if (l->cursor < l->content_len) {
+            lexer_chop_char(l, 1);
+        }
+        token.text_len = &l->content[l->cursor] - token.text;
+        return token;
+    }
+
     if (l->content[l->cursor] == '#') {
-        token.type = TOKEN_COMMENT;
+        token.type = TOKEN_HEADER;
         while (l->cursor < l->content_len && l->content[l->cursor] != '\n') {
             lexer_chop_char(l, 1);
         }
