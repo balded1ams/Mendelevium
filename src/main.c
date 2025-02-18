@@ -1,23 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "include/rmd_lexer.h"
+#include <string.h>
+
+#include "rmd_lexer.h"
+#include "common.h"
+#include "provider.h"
 
 int main(void) {
-    FILE *file = fopen("test.rmd", "r");
-
-    fseek(file, 0, SEEK_END);
-    size_t file_size = ftell(file);
-    rewind(file);
-
-    char *input = malloc(file_size + 1);
-
-    fread(input, 1, file_size, file);
-    input[file_size] = '\0';
-    fclose(file);
-
-    Rmd_Lexer lexer = _Rmd_lexer_init(input, file_size);
+    Rmd_Lexer lexer = provide_lexer("test.rmd");
     Rmd_Token token;
-    
     int is_header = 0;
 
     while (lexer.cursor < lexer.content_len) {
@@ -30,7 +21,7 @@ int main(void) {
             is_header = 1;
         } else {
             if (is_header) {
-                printf("\033[0m\n"); // Reset après un header
+                printf("\033[0m\n"); // Reset after header
                 is_header = 0;
             }
         }
@@ -41,14 +32,11 @@ int main(void) {
         }
 
         printf("%.*s", (int)token.text_len, token.text);
-
-        if (token.type != TOKEN_HEADER) {
-            printf(" ");
-        }
     }
-
     printf("\033[0m\n");
-    free(input);
+    
+    free(lexer.content);
+
     return EXIT_SUCCESS;
 }
 

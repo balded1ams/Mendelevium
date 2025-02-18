@@ -1,9 +1,8 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -Werror -Iinclude -I/usr/include/freetype2 -I/usr/include/libpng16
-LDFLAGS=-lX11 -lXft
+CFLAGS=-Wall -Wextra -Werror -Iinclude 
+LDFLAGS=-lX11 -lXft -lXcomposite -lXrender
 
-
-all: main.c src/rmd_lexer.c
+all: src/*
 	$(CC) $(CFLAGS) -o main $? $(LDFLAGS)
 
 clean:
